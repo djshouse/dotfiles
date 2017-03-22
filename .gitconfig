@@ -1,0 +1,26 @@
+[filter "lfs"]
+	required = true
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+[user]
+	email = djrose7@gmail.com
+	name = DJ Rose
+[alias]
+	br = !git branch -va
+	cb = checkout -B
+	st = status
+	spull = !git pull && git submodule sync --recursive && git submodule update --init --recursive
+	spush = push --recurse-submodules=on-demand
+	supdate = submodule update --init --recursive
+	tidy = rebase -i @{u}
+	lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative
+	summary = log --prettty=format:'[%h] %an %ar: %s' --stat
+	lp = log -p -1
+	srebase = submodule update --remote --rebase -- .
+[pull]
+	rebase = preserve
+[status]
+	submoduleSummary = true
+[diff]
+	submodule = log
