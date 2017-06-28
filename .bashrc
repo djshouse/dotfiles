@@ -1,6 +1,5 @@
 alias ll="ls -lh"
 alias e="subl . &"
-alias dotfile="/usr/bin/git --git-dir=$HOME/.myconfig/ --work-tree=$HOME"
 
 export MYPS='$(echo -n "${PWD/#$HOME/~}" | awk -F "/" '"'"'{
 if (length($0) > 14) { if (NF>3) print $1 "/.../" $(NF-1) "/" $NF;
