@@ -3,6 +3,10 @@
 
 ;; variables
 (custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
  '(custom-enabled-themes (quote (material)))
  '(custom-safe-themes
    (quote
@@ -11,7 +15,7 @@
  '(dired-use-ls-dired nil)
  '(ido-mode (quote both) nil (ido))
  '(inhibit-startup-screen t)
- '(initial-buffer-choice "~/Documents/PTK/ptkml")
+ '(initial-buffer-choice "~")
  '(initial-frame-alist (quote ((fullscreen . maximized))))
  '(package-archives
    (quote
@@ -20,6 +24,9 @@
  '(package-install-selected-packages
    (quote
     (expand-region markdown-mode company-anaconda anaconda-mode f s dash pythonic material-theme elpy multi-term exec-path-from-shell cl-generic hydra spinner paradox request websocket ein multiple-cursors)))
+ '(package-selected-packages
+   (quote
+    (cl-generic ein hydra multiple-cursors paradox request spinner websocket anaconda-mode company-anaconda dash elpy expand-region f markdown-mode material-theme multi-term pythonic s exec-path-from-shell)))
  '(tool-bar-mode nil)
  '(uniquify-buffer-name-style (quote post-forward) nil (uniquify)))
 
@@ -56,4 +63,8 @@
 
 ;; faces
 (custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
  '(default ((t (:height 135 :family "Monaco")))))
