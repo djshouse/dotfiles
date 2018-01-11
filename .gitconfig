@@ -14,13 +14,20 @@
 	spush = push --recurse-submodules=on-demand
 	supdate = submodule update --init --recursive
 	tidy = rebase -i @{u}
-	lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative
+	lg = log --graph --pretty=format:'%C(yellow)%h%Creset -%C(red)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative
 	summary = log --prettty=format:'[%h] %an %ar: %s' --stat
 	lp = log -p -1
 	srebase = submodule update --remote --rebase -- .
+	dag = log --graph --format='format:%C(yellow)%h%C(reset) %C(blue)\"%an\" <%ae>%C(reset) %C(magenta)%cr%C(reset)%C(auto)%d%C(reset)%n%s' --date-order
 [pull]
 	rebase = preserve
 [status]
 	submoduleSummary = true
 [diff]
 	submodule = log
+[color]
+	ui = auto
+[core]
+	pager = less -FMRiX
+[push]
+	default = simple

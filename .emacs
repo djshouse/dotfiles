@@ -21,10 +21,14 @@
    (quote
     ("bb08c73af94ee74453c90422485b29e5643b73b05e8de029a6909af6a3fb3f58" "67e998c3c23fe24ed0fb92b9de75011b92f35d3e89344157ae0d544d50a63a72" default)))
  '(delete-selection-mode t)
+ '(dired-dwim-target t)
  '(dired-use-ls-dired nil)
+ '(ein:default-url-or-port 8889)
+ '(ein:enable-keepalive t)
  '(ein:notebook-modes
    (quote
     (ein:notebook-multilang-mode ein:notebook-python-mode ein:notebook-plain-mode)))
+ '(electric-indent-mode t)
  '(fci-rule-color "#37474f")
  '(flycheck-color-mode-line-face-to-color (quote mode-line-buffer-id))
  '(ido-mode (quote both) nil (ido))
@@ -44,7 +48,7 @@
     (expand-region markdown-mode company-anaconda anaconda-mode f s dash pythonic material-theme elpy multi-term exec-path-from-shell cl-generic hydra spinner paradox request websocket ein multiple-cursors)))
  '(package-selected-packages
    (quote
-    (change-inner ace-window magit theme-changer zenburn-theme color-theme-sanityinc-tomorrow color-theme-solarized solarized-theme edbi cl-generic ein hydra multiple-cursors paradox request spinner websocket anaconda-mode company-anaconda dash elpy expand-region f markdown-mode material-theme multi-term pythonic s exec-path-from-shell)))
+    (aggressive-indent pydoc sx change-inner ace-window magit theme-changer zenburn-theme color-theme-sanityinc-tomorrow color-theme-solarized solarized-theme edbi cl-generic ein hydra multiple-cursors paradox request spinner websocket anaconda-mode company-anaconda dash expand-region f markdown-mode material-theme multi-term pythonic s exec-path-from-shell)))
  '(pdf-view-midnight-colors (quote ("#DCDCCC" . "#383838")))
  '(pos-tip-background-color "#073642")
  '(pos-tip-foreground-color "#93a1a1")
@@ -112,12 +116,15 @@
 
 
 ;; packages and hooks
+(global-aggressive-indent-mode 1)
 (when (memq window-system '(mac ns))
 (exec-path-from-shell-initialize))
 (electric-pair-mode 1)
 (add-hook 'after-init-hook 'global-company-mode)
 (add-hook 'find-file-hook 'linum-mode)
 (add-hook 'python-mode-hook 'anaconda-mode)
+(add-hook 'anaconda-mode-hook
+          #'(lambda () (setq electric-indent-mode nil)))
 (eval-after-load "company"
   '(add-to-list 'company-backends 'company-anaconda))
 
@@ -145,18 +152,18 @@
   (add-to-list 'term-unbind-key-list "C-e"))
 
 ;; theme changer
-(setq calendar-location-name "Seattle, WA") 
-(setq calendar-latitude 47.61)
-(setq calendar-longitude -122.33)
-(require 'theme-changer)
-(change-theme 'sanityinc-tomorrow-day 'zenburn)
-(put 'upcase-region 'disabled nil)
+;;(setq calendar-location-name "Seattle, WA") 
+;;(setq calendar-latitude 47.61)
+;;(setq calendar-longitude -122.33)
+;;(require 'theme-changer)
+;;(change-theme 'sanityinc-tomorrow-day 'zenburn)
+;;(put 'upcase-region 'disabled nil)
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- )
+ '(default ((t (:inherit nil :stipple nil :background "#3F3F3F" :foreground "#DCDCCC" :inverse-video nil :box nil :strike-through nil :overline nil :underline nil :slant normal :weight normal :height 120 :width normal :foundry "nil" :family "Office Code Pro")))))
 
 ;; magit and tramp
 (require 'tramp)
