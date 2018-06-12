@@ -9,6 +9,10 @@ else print $0;}'"'"')'
 PS1="\[\033[1;35m\]\h\[$(tput sgr0)\]:${MYPS} \$ "
 
 export TERM=xterm-256color
+export AWS_REGION=us-east-1
+
 export PATH=$BRAZIL_CLI_BIN:$PATH
 export PATH=$PATH:~/bin
 export PATH=/usr/bin:$PATH
+export PATH=$PATH:/Applications/Postgres.app/Contents/Versions/latest/bin
+

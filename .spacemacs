@@ -36,6 +36,7 @@ values."
      ;; Uncomment some layer names and press <SPC f e R> (Vim style) or
      ;; <M-m f e R> (Emacs style) to install them.
      ;; ----------------------------------------------------------------
+     csv
      helm
      auto-completion
      better-defaults
@@ -49,25 +50,26 @@ values."
             shell-default-shell 'multi-term
             shell-default-full-span nil
             )
-     ;; spell-checking
-     ;; syntax-checking
+     syntax-checking
      version-control
-     python
      ipython-notebook
-     (elfeed :variables
-             rmh-elfeed-org-files (list "~/.emacs.d/private/elfeed.org")
-             )
      sql
+	 better-ess
+     elpy
      )
    ;; List of additional packages that will be installed without being
    ;; wrapped in a layer. If you need some configuration for these
    ;; packages, then consider creating a layer. You can also put the
    ;; configuration in `dotspacemacs/user-config'.
-   dotspacemacs-additional-packages '(multiple-cursors)
+   dotspacemacs-additional-packages '(doom-themes
+                                      multiple-cursors
+									  neotree
+									  spaceline-all-the-icons
+                                      )
    ;; A list of packages that cannot be updated.
    dotspacemacs-frozen-packages '()
    ;; A list of packages that will not be installed and loaded.
-   dotspacemacs-excluded-packages '()
+   dotspacemacs-excluded-packages '(doom-one-theme)
    ;; Defines the behaviour of Spacemacs when installing packages.
    ;; Possible values are `used-only', `used-but-keep-unused' and `all'.
    ;; `used-only' installs only explicitly used packages and uninstall any
@@ -135,16 +137,16 @@ values."
    ;; List of themes, the first of the list is loaded when spacemacs starts.
    ;; Press <SPC> T n to cycle to the next theme in the list (works great
    ;; with 2 themes variants, one dark and one light)
-   dotspacemacs-themes '(zenburn)
+   dotspacemacs-themes '(doom-one)
    ;; If non nil the cursor color matches the state color in GUI Emacs.
    dotspacemacs-colorize-cursor-according-to-state t
    ;; Default font, or prioritized list of fonts. `powerline-scale' allows to
    ;; quickly tweak the mode-line size to make separators look not too crappy.
-   dotspacemacs-default-font '("Office Code Pro"
-                               :size 12.5
-                               :weight normal
-                               :width normal
-                               :powerline-scale 1)
+   ;; dotspacemacs-default-font '("Office Code Pro"
+   ;;                             :size 13
+   ;;                             :weight light
+   ;;                             :width normal
+   ;;                             )
    ;; The leader key
    dotspacemacs-leader-key "SPC"
    ;; The key used for Emacs commands (M-x) (after pressing on the leader key).
@@ -335,92 +337,48 @@ you should place your code here."
   (global-set-key (kbd "C-<") 'mc/mark-previous-like-this)
   (global-set-key (kbd "C-c C->") 'mc/mark-all-like-this)
 
-  ;; spaceline config
-  ;; mdi.el was downloaded from https://github.com/angrybacon/mdi
-  ;; and stored in ~/.emacs.d/lisp/mdi/
-  (use-package mdi
-    :demand t
-    :load-path "lisp/mdi/")
-
-  (use-package spaceline
-  :demand t
-  :config
-
-  (spaceline-define-segment me/erc-track
-    "Show the ERC buffers with new messages."
-    (when (bound-and-true-p erc-track-mode)
-      (mapcar (lambda (buffer)
-                (format "%s%s%s"
-                        (buffer-name (pop buffer))
-                        erc-track-showcount-string
-                        (pop buffer)))
-              erc-modified-channels-alist)))
-
-  (spaceline-define-segment me/helm-follow
-    "Show `helm-follow-mode' status."
-    (if (and (bound-and-true-p helm-alive-p)
-             spaceline--helm-current-source
-             (eq 1 (cdr (assq 'follow spaceline--helm-current-source))))
-        (propertize (mdi "eye") 'face 'success)
-      (propertize (mdi "eye-off") 'face 'warning)))
-
-  (spaceline-define-segment me/selection-info
-    "Show the size of current region."
-    (when mark-active
-      (let ((characters (- (region-end) (region-beginning)))
-            (rows (count-lines (region-beginning) (min (1+ (region-end)) (point-max))))
-            (columns (1+ (abs (- (spaceline--column-number-at-pos (region-end))
-                                 (spaceline--column-number-at-pos (region-beginning)))))))
-        (cond
-         ((bound-and-true-p rectangle-mark-mode)
-          (format "%d%s%d" (1- columns) (mdi "arrow-expand-all" t) rows))
-         ((> rows 1)
-          (format "%d" (if (eq (current-column) 0) (1- rows) rows)))
-         (t (format "%d" characters))))))
-
-  (spaceline-define-segment me/version-control
-    "Show the current version control branch."
-    (when vc-mode
-      (substring vc-mode (+ 2 (length (symbol-name (vc-backend buffer-file-name))))))))
-
-  (use-package spaceline-config
-  :demand t
-  :ensure nil
-  :config
-
-  ;; Configure the mode-line
+  ;; modeline config
+  (use-package spaceline-all-the-icons
+    :after spaceline
+    :config (spaceline-all-the-icons-theme))
   (setq-default
-   mode-line-format '("%e" (:eval (spaceline-ml-main)))
-   powerline-default-separator 'arrow
-   powerline-height 20
    spaceline-highlight-face-func 'spaceline-highlight-face-modified
-   spaceline-flycheck-bullet (format "%s %s" (mdi "record") "%s")
-   spaceline-separator-dir-left '(left . left)
-   spaceline-separator-dir-right '(right . right))
-  (spaceline-helm-mode)
+   spaceline-line-face 'spaceline-highlight-face-modified)
 
-  ;; Build the mode-lines
-  (spaceline-install
-    `(((window-number major-mode) :face highlight-face)
-      ((remote-host buffer-id line-column) :separator "\t" :face highlight-face)
-      (anzu))
-    `((me/selection-info)
-      (me/erc-track :face spaceline-highlight-face :when active)
-      ((flycheck-error flycheck-warning flycheck-info))
-      ((projectile-root me/version-control) :separator (mdi "source-branch" t))
-      (workspace-number)
-      (global :face highlight-face)))
-  (spaceline-install
-    'helm
-    '((helm-buffer-id :face spaceline-read-only)
-      (helm-number)
-      (me/helm-follow)
-      (helm-prefix-argument))
-    '((me/erc-track :face spaceline-highlight-face :when active)
-      (workspace-number)
-      (global :face spaceline-read-only))))
-  )
+  ;; magit over tramp
+  (require 'tramp)
+  (add-to-list 'tramp-remote-path "/apollo/env/SDETools/bin")
 
+  ;; ess turn off underscore-to-arrow conversion
+  (add-hook 'ess-mode-hook
+            (lambda ()
+              (ess-toggle-underscore nil)))
+
+  ;; tab configuration
+  (setq-default aggressive-indent-mode t)
+  (setq-default tab-width 4)
+
+  ;; neotree config
+  (require 'neotree)
+  (global-set-key [f8] 'neotree-toggle)
+  (setq neo-theme 'icons)
+  (neotree-toggle)
+
+  ;; doom themes
+  (setq doom-themes-enable-bold t
+        doom-themes-enable-italic t)
+  (doom-themes-visual-bell-config)
+  (doom-themes-neotree-config)
+
+
+  ;; highlight numbers
+  (add-hook 'prog-mode-hook 'highlight-numbers-mode)
+
+  ;; exec path from shell
+  (when (memq window-system '(mac ns x))
+    (exec-path-from-shell-initialize))
+
+)
 
 ;; Do not write anything past this comment. This is where Emacs will
 ;; auto-generate custom variable definitions.
@@ -429,14 +387,17 @@ you should place your code here."
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(ansi-color-names-vector
+   ["#0a0814" "#f2241f" "#67b11d" "#b1951d" "#4f97d7" "#a31db1" "#28def0" "#b2b2b2"])
  '(package-selected-packages
    (quote
-    (fringe-helper git-gutter-fringe+ git-gutter-fringe git-gutter+ git-gutter flycheck diff-hl sql-indent multiple-cursors elfeed-web elfeed-org elfeed-goodies ace-jump-mode noflet elfeed org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-download htmlize gnuplot xterm-color shell-pop multi-term eshell-z eshell-prompt-extras esh-help yapfify smeargle pyvenv pytest pyenv-mode py-isort pip-requirements orgit magit-gitflow live-py-mode hy-mode dash-functional helm-pydoc helm-gitignore gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link evil-magit magit magit-popup git-commit ghub let-alist with-editor ein skewer-mode request-deferred websocket deferred js2-mode simple-httpd cython-mode company-anaconda anaconda-mode pythonic unfill mwim helm-company helm-c-yasnippet fuzzy company-statistics company auto-yasnippet yasnippet ac-ispell auto-complete ws-butler winum which-key volatile-highlights vi-tilde-fringe uuidgen use-package toc-org spaceline powerline restart-emacs request rainbow-delimiters popwin persp-mode pcre2el paradox spinner org-plus-contrib org-bullets open-junk-file neotree move-text macrostep lorem-ipsum linum-relative link-hint info+ indent-guide hydra hungry-delete hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation hide-comnt help-fns+ helm-themes helm-swoop helm-projectile helm-mode-manager helm-make projectile pkg-info epl helm-flx helm-descbinds helm-ag google-translate golden-ratio flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu highlight elisp-slime-nav dumb-jump f dash s diminish define-word column-enforce-mode clean-aindent-mode bind-map bind-key auto-highlight-symbol auto-compile packed aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line helm avy helm-core popup async))))
+    (doom-nord-theme doom-themes csv-mode spaceline-all-the-icons all-the-icons memoize jedi jedi-core python-environment epc concurrent elpy find-file-in-project ivy flycheck-pos-tip pos-tip ess-smart-equals ess-R-data-view ctable ess julia-mode fringe-helper git-gutter-fringe+ git-gutter-fringe git-gutter+ git-gutter flycheck diff-hl sql-indent multiple-cursors elfeed-web elfeed-org elfeed-goodies ace-jump-mode noflet elfeed org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-download htmlize gnuplot xterm-color shell-pop multi-term eshell-z eshell-prompt-extras esh-help yapfify smeargle pyvenv pytest pyenv-mode py-isort pip-requirements orgit magit-gitflow live-py-mode hy-mode dash-functional helm-pydoc helm-gitignore gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link evil-magit magit magit-popup git-commit ghub let-alist with-editor ein skewer-mode request-deferred websocket deferred js2-mode simple-httpd cython-mode company-anaconda anaconda-mode pythonic unfill mwim helm-company helm-c-yasnippet fuzzy company-statistics company auto-yasnippet yasnippet ac-ispell auto-complete ws-butler winum which-key volatile-highlights vi-tilde-fringe uuidgen use-package toc-org spaceline powerline restart-emacs request rainbow-delimiters popwin persp-mode pcre2el paradox spinner org-plus-contrib org-bullets open-junk-file neotree move-text macrostep lorem-ipsum linum-relative link-hint info+ indent-guide hydra hungry-delete hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation hide-comnt help-fns+ helm-themes helm-swoop helm-projectile helm-mode-manager helm-make projectile pkg-info epl helm-flx helm-descbinds helm-ag google-translate golden-ratio flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu highlight elisp-slime-nav dumb-jump f dash s diminish define-word column-enforce-mode clean-aindent-mode bind-map bind-key auto-highlight-symbol auto-compile packed aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line helm avy helm-core popup async)))
+ '(spaceline-all-the-icons-separator-type (quote none))
+ '(tab-width 4))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(default ((t (:foreground "#DCDCCC" :background "#383838"))))
  '(spaceline-modified ((t (:background "DarkGoldenrod2" :foreground "#3E3D31" :inherit (quote mode-line)))))
  '(spaceline-unmodified ((t (:background "SkyBlue2" :foreground "#3E3D31" :inherit (quote mode-line))))))
