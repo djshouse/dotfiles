@@ -30,7 +30,7 @@ values."
    dotspacemacs-configuration-layer-path '()
    ;; List of configuration layers to load.
    dotspacemacs-configuration-layers
-   '(
+   '(sql
      ;; ----------------------------------------------------------------
      ;; Example of useful layers you may want to use right away.
      ;; Uncomment some layer names and press <SPC f e R> (Vim style) or
@@ -53,23 +53,31 @@ values."
      syntax-checking
      version-control
      ipython-notebook
-     sql
-	 better-ess
+     ;; sql
+	 (better-ess :variables
+                 ess-toggle-underscore nil
+                 )
      elpy
      )
    ;; List of additional packages that will be installed without being
    ;; wrapped in a layer. If you need some configuration for these
    ;; packages, then consider creating a layer. You can also put the
    ;; configuration in `dotspacemacs/user-config'.
-   dotspacemacs-additional-packages '(doom-themes
+   dotspacemacs-additional-packages '(all-the-icons
+                                      change-inner
+                                      doom-themes
+                                      exec-path-from-shell
+                                      expand-region
+                                      hide-mode-line
                                       multiple-cursors
 									  neotree
+                                      solaire-mode
 									  spaceline-all-the-icons
                                       )
    ;; A list of packages that cannot be updated.
    dotspacemacs-frozen-packages '()
    ;; A list of packages that will not be installed and loaded.
-   dotspacemacs-excluded-packages '(doom-one-theme)
+   dotspacemacs-excluded-packages '()
    ;; Defines the behaviour of Spacemacs when installing packages.
    ;; Possible values are `used-only', `used-but-keep-unused' and `all'.
    ;; `used-only' installs only explicitly used packages and uninstall any
@@ -137,7 +145,7 @@ values."
    ;; List of themes, the first of the list is loaded when spacemacs starts.
    ;; Press <SPC> T n to cycle to the next theme in the list (works great
    ;; with 2 themes variants, one dark and one light)
-   dotspacemacs-themes '(doom-one)
+   dotspacemacs-themes '(doom-nord doom-nord-light)
    ;; If non nil the cursor color matches the state color in GUI Emacs.
    dotspacemacs-colorize-cursor-according-to-state t
    ;; Default font, or prioritized list of fonts. `powerline-scale' allows to
@@ -201,7 +209,7 @@ values."
    ;; Maximum number of rollback slots to keep in the cache. (default 5)
    dotspacemacs-max-rollback-slots 5
    ;; If non nil, `helm' will try to minimize the space it uses. (default nil)
-   dotspacemacs-helm-resize nil
+   dotspacemacs-helm-resize t
    ;; if non nil, the helm header is hidden when there is only one source.
    ;; (default nil)
    dotspacemacs-helm-no-header nil
@@ -307,7 +315,7 @@ values."
    ;; `trailing' to delete only the whitespace at end of lines, `changed'to
    ;; delete only whitespace for changed lines or `nil' to disable cleanup.
    ;; (default nil)
-   dotspacemacs-whitespace-cleanup nil
+   dotspacemacs-whitespace-cleanup 'changed
    ))
 
 (defun dotspacemacs/user-init ()
@@ -317,6 +325,8 @@ executes.
  This function is mostly useful for variables that need to be set
 before packages are loaded. If you are unsure, you should try in setting them in
 `dotspacemacs/user-config' first."
+  (setq custom-file "~/.emacs.d/custom.el")
+  (load custom-file)
   )
 
 (defun dotspacemacs/user-config ()
@@ -337,13 +347,29 @@ you should place your code here."
   (global-set-key (kbd "C-<") 'mc/mark-previous-like-this)
   (global-set-key (kbd "C-c C->") 'mc/mark-all-like-this)
 
-  ;; modeline config
-  (use-package spaceline-all-the-icons
-    :after spaceline
-    :config (spaceline-all-the-icons-theme))
-  (setq-default
-   spaceline-highlight-face-func 'spaceline-highlight-face-modified
-   spaceline-line-face 'spaceline-highlight-face-modified)
+  ;; change-inner and expand-region config
+  (global-set-key (kbd "C-@") 'er/expand-region)
+  (global-set-key (kbd "C-c i") 'change-inner)
+  (global-set-key (kbd "C-c o") 'change-outer)
+
+  ;; pending delete mode
+  (pending-delete-mode t)
+
+  ;; neotree config
+  (global-set-key [f8] 'neotree-toggle)
+  (setq neo-theme 'icons)
+  (add-hook 'window-setup-hook 'neotree-show)
+  ;; check this section in late 2018 to see if fix has been pushed
+  (with-eval-after-load "helm"
+    (defun helm-persistent-action-display-window (&optional split-onewindow)
+      "Return the window that will be used for persistent action.
+If SPLIT-ONEWINDOW is non-`nil' window is split in persistent action."
+      (with-helm-window
+        (setq helm-persistent-action-display-window (get-mru-window)))))
+
+  ;; exec path from shell
+  (when (memq window-system '(mac ns x))
+    (exec-path-from-shell-initialize))
 
   ;; magit over tramp
   (require 'tramp)
@@ -355,49 +381,67 @@ you should place your code here."
               (ess-toggle-underscore nil)))
 
   ;; tab configuration
-  (setq-default aggressive-indent-mode t)
-  (setq-default tab-width 4)
+  (setq aggressive-indent-mode t)
+  (setq default-tab-width 4)
 
-  ;; neotree config
-  (require 'neotree)
-  (global-set-key [f8] 'neotree-toggle)
-  (setq neo-theme 'icons)
-  (neotree-toggle)
+  ;; modeline config
+  (use-package spaceline-all-the-icons
+    :after spaceline
+    :config
+    (spaceline-all-the-icons-theme)
+    (spaceline-all-the-icons--setup-git-ahead)
+    (spaceline-all-the-icons--setup-neotree)
+    (setq spaceline-all-the-icons-flycheck-alternate t)
+    (setq spaceline-all-the-icons-highlight-file-name t)
+    )
+  (setq-default
+   spaceline-all-the-icons-separator-type 'none
+   spaceline-highlight-face-func 'spaceline-highlight-face-modified
+   spaceline-line-face 'spaceline-highlight-face-modified
+   )
+  (add-hook 'completion-list-mode-hook 'hide-mode-line-mode)
+  (add-hook 'neotree-mode-hook 'hide-mode-line-mode)
+  (add-hook 'magit-mode-hook 'hide-mode-line-mode)
+
+  ;; title bar invisible and frame to fill full screen
+  (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
+  (add-to-list 'default-frame-alist '(ns-appearance . dark))
+  (setq ns-use-proxy-icon nil)
+  (setq frame-title-format nil)
+  (setq frame-resize-pixelwise t)
+
+  ;; solaire mode
+  (add-hook 'change-major-mode-hook #'turn-on-solaire-mode)
+  (add-hook 'minibuffer-setup-hook #'solaire-mode-in-minibuffer)
+  (solaire-mode-swap-bg)
 
   ;; doom themes
   (setq doom-themes-enable-bold t
         doom-themes-enable-italic t)
   (doom-themes-visual-bell-config)
-  (doom-themes-neotree-config)
 
-
-  ;; highlight numbers
-  (add-hook 'prog-mode-hook 'highlight-numbers-mode)
-
-  ;; exec path from shell
-  (when (memq window-system '(mac ns x))
-    (exec-path-from-shell-initialize))
-
+  (call-interactively 'other-window 1)
 )
 
 ;; Do not write anything past this comment. This is where Emacs will
 ;; auto-generate custom variable definitions.
+(defun dotspacemacs/emacs-custom-settings ()
+  "Emacs custom settings.
+This is an auto-generated function, do not modify its content directly, use
+Emacs customize menu instead.
+This function is called at the very end of Spacemacs initialization."
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(ansi-color-names-vector
-   ["#0a0814" "#f2241f" "#67b11d" "#b1951d" "#4f97d7" "#a31db1" "#28def0" "#b2b2b2"])
  '(package-selected-packages
    (quote
-    (doom-nord-theme doom-themes csv-mode spaceline-all-the-icons all-the-icons memoize jedi jedi-core python-environment epc concurrent elpy find-file-in-project ivy flycheck-pos-tip pos-tip ess-smart-equals ess-R-data-view ctable ess julia-mode fringe-helper git-gutter-fringe+ git-gutter-fringe git-gutter+ git-gutter flycheck diff-hl sql-indent multiple-cursors elfeed-web elfeed-org elfeed-goodies ace-jump-mode noflet elfeed org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-download htmlize gnuplot xterm-color shell-pop multi-term eshell-z eshell-prompt-extras esh-help yapfify smeargle pyvenv pytest pyenv-mode py-isort pip-requirements orgit magit-gitflow live-py-mode hy-mode dash-functional helm-pydoc helm-gitignore gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link evil-magit magit magit-popup git-commit ghub let-alist with-editor ein skewer-mode request-deferred websocket deferred js2-mode simple-httpd cython-mode company-anaconda anaconda-mode pythonic unfill mwim helm-company helm-c-yasnippet fuzzy company-statistics company auto-yasnippet yasnippet ac-ispell auto-complete ws-butler winum which-key volatile-highlights vi-tilde-fringe uuidgen use-package toc-org spaceline powerline restart-emacs request rainbow-delimiters popwin persp-mode pcre2el paradox spinner org-plus-contrib org-bullets open-junk-file neotree move-text macrostep lorem-ipsum linum-relative link-hint info+ indent-guide hydra hungry-delete hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation hide-comnt help-fns+ helm-themes helm-swoop helm-projectile helm-mode-manager helm-make projectile pkg-info epl helm-flx helm-descbinds helm-ag google-translate golden-ratio flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu highlight elisp-slime-nav dumb-jump f dash s diminish define-word column-enforce-mode clean-aindent-mode bind-map bind-key auto-highlight-symbol auto-compile packed aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line helm avy helm-core popup async)))
- '(spaceline-all-the-icons-separator-type (quote none))
- '(tab-width 4))
+    (exec-path-from-shell yasnippet-snippets xterm-color ws-butler winum which-key volatile-highlights vi-tilde-fringe uuidgen use-package unfill toc-org symon string-inflection sql-indent spaceline-all-the-icons solaire-mode smeargle shell-pop restart-emacs rainbow-delimiters popwin persp-mode pcre2el password-generator paradox overseer orgit org-projectile org-present org-pomodoro org-mime org-download org-bullets org-brain open-junk-file ob-ipython neotree nameless mwim multiple-cursors multi-term move-text mmm-mode markdown-toc magit-svn magit-gitflow macrostep lorem-ipsum link-hint jedi indent-guide hungry-delete htmlize hl-todo highlight-parentheses highlight-numbers hide-mode-line helm-xref helm-themes helm-swoop helm-purpose helm-projectile helm-mode-manager helm-make helm-gitignore helm-git-grep helm-flx helm-descbinds helm-company helm-c-yasnippet helm-ag google-translate golden-ratio gnuplot gitignore-templates gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link git-gutter-fringe git-gutter-fringe+ gh-md fuzzy font-lock+ flycheck-pos-tip flx-ido fill-column-indicator fancy-battery eyebrowse evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-org evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-magit evil-lisp-state evil-lion evil-indent-plus evil-iedit-state evil-goggles evil-exchange evil-escape evil-ediff evil-cleverparens evil-args evil-anzu eval-sexp-fu ess-smart-equals ess-R-data-view eshell-z eshell-prompt-extras esh-help elpy elisp-slime-nav ein editorconfig edbi dumb-jump dotenv-mode doom-themes doom-modeline diminish diff-hl define-word csv-mode counsel-projectile company-statistics column-enforce-mode clean-aindent-mode change-inner centered-cursor-mode browse-at-remote auto-yasnippet auto-highlight-symbol auto-compile aggressive-indent ace-window ace-link ace-jump-helm-line ac-ispell))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(spaceline-modified ((t (:background "DarkGoldenrod2" :foreground "#3E3D31" :inherit (quote mode-line)))))
- '(spaceline-unmodified ((t (:background "SkyBlue2" :foreground "#3E3D31" :inherit (quote mode-line))))))
+ )
+)
