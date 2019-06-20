@@ -30,19 +30,28 @@ values."
    dotspacemacs-configuration-layer-path '()
    ;; List of configuration layers to load.
    dotspacemacs-configuration-layers
-   '(sql
+   '(yaml
      ;; ----------------------------------------------------------------
      ;; Example of useful layers you may want to use right away.
      ;; Uncomment some layer names and press <SPC f e R> (Vim style) or
      ;; <M-m f e R> (Emacs style) to install them.
      ;; ----------------------------------------------------------------
-     csv
-     helm
      auto-completion
      better-defaults
+     (better-ess :variables
+                 ess-toggle-underscore nil
+                 )
+     csv
+     elpy
      emacs-lisp
      git
+     helm
+     html
+     ipython-notebook
+     javascript
      markdown
+     neotree
+     nginx
      org
      (shell :variables
             shell-default-height 30
@@ -50,15 +59,10 @@ values."
             shell-default-shell 'multi-term
             shell-default-full-span nil
             )
+     sql
      syntax-checking
      version-control
-     ipython-notebook
-     ;; sql
-	 (better-ess :variables
-                 ess-toggle-underscore nil
-                 )
-     elpy
-     )
+	   )
    ;; List of additional packages that will be installed without being
    ;; wrapped in a layer. If you need some configuration for these
    ;; packages, then consider creating a layer. You can also put the
@@ -66,13 +70,14 @@ values."
    dotspacemacs-additional-packages '(all-the-icons
                                       change-inner
                                       doom-themes
+                                      edbi
                                       exec-path-from-shell
                                       expand-region
                                       hide-mode-line
                                       multiple-cursors
-									  neotree
+                                      pdf-tools
                                       solaire-mode
-									  spaceline-all-the-icons
+									                    spaceline-all-the-icons
                                       )
    ;; A list of packages that cannot be updated.
    dotspacemacs-frozen-packages '()
@@ -200,7 +205,7 @@ values."
    ;; Size (in MB) above which spacemacs will prompt to open the large file
    ;; literally to avoid performance issues. Opening a file literally means that
    ;; no major mode or minor modes are active. (default is 1)
-   dotspacemacs-large-file-size 1
+   dotspacemacs-large-file-size 10
    ;; Location where to auto-save files. Possible values are `original' to
    ;; auto-save the file in-place, `cache' to auto-save the file to another
    ;; file stored in the cache directory and `nil' to disable auto-saving.
@@ -325,8 +330,8 @@ executes.
  This function is mostly useful for variables that need to be set
 before packages are loaded. If you are unsure, you should try in setting them in
 `dotspacemacs/user-config' first."
-  (setq custom-file "~/.emacs.d/custom.el")
-  (load custom-file)
+  ;; (setq custom-file "~/.emacs.d/custom.el")
+  ;; (load custom-file)
   )
 
 (defun dotspacemacs/user-config ()
@@ -340,6 +345,23 @@ you should place your code here."
   (setq mac-control-modifier 'super)
   (setq mac-command-modifier 'control)
   (setq mac-option-modifier 'meta)
+
+  ;; title bar invisible and frame to fill full screen
+  (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
+  (add-to-list 'default-frame-alist '(ns-appearance . dark))
+  (setq ns-use-proxy-icon nil)
+  (setq frame-title-format nil)
+  (setq frame-resize-pixelwise t)
+
+  ;; solaire mode
+  (add-hook 'change-major-mode-hook #'turn-on-solaire-mode)
+  (add-hook 'minibuffer-setup-hook #'solaire-mode-in-minibuffer)
+  (solaire-mode-swap-bg)
+
+  ;; doom themes
+  (setq doom-themes-enable-bold t
+        doom-themes-enable-italic t)
+  (doom-themes-visual-bell-config)
 
   ;; multiple-cursors config
   (global-set-key (kbd "C-S-c C-S-c") 'mc/edit-lines)
@@ -355,10 +377,17 @@ you should place your code here."
   ;; pending delete mode
   (pending-delete-mode t)
 
+  ;; python
+  (setq python-shell-interpreter "ipython3" python-shell-interpreter-args "--simple-prompt --pprint")
+
+  ;; flycheck
+  (add-hook 'prog-mode-hook 'flycheck-mode)
+
   ;; neotree config
-  (global-set-key [f8] 'neotree-toggle)
   (setq neo-theme 'icons)
+  (setq neo-vc-integration '(face))
   (add-hook 'window-setup-hook 'neotree-show)
+  (setq neo-autorefresh nil)
   ;; check this section in late 2018 to see if fix has been pushed
   (with-eval-after-load "helm"
     (defun helm-persistent-action-display-window (&optional split-onewindow)
@@ -385,42 +414,33 @@ If SPLIT-ONEWINDOW is non-`nil' window is split in persistent action."
   (setq default-tab-width 4)
 
   ;; modeline config
-  (use-package spaceline-all-the-icons
+  (defun compile-modeline ()
+    (use-package spaceline-all-the-icons
     :after spaceline
     :config
     (spaceline-all-the-icons-theme)
+    (spaceline-all-the-icons--setup-anzu)
     (spaceline-all-the-icons--setup-git-ahead)
-    (spaceline-all-the-icons--setup-neotree)
+    (spaceline-toggle-all-the-icons-eyebrowse-workspace-off)
+    (spaceline-toggle-all-the-icons-flycheck-status-on)
+    ;; (spaceline-toggle-all-the-icons-git-ahead-on)
+    (spaceline-toggle-all-the-icons-modified-off)
+    (spaceline-toggle-all-the-icons-projectile-off)
+    (spaceline-toggle-all-the-icons-region-info-on)
+    (spaceline-toggle-all-the-icons-time-off)
     (setq spaceline-all-the-icons-flycheck-alternate t)
     (setq spaceline-all-the-icons-highlight-file-name t)
+     )
+    (setq-default
+     spaceline-all-the-icons-separator-type 'none
+     spaceline-highlight-face-func 'spaceline-highlight-face-modified
+     spaceline-line-face 'spaceline-highlight-face-modified
+     )
+    (add-hook 'completion-list-mode-hook 'hide-mode-line-mode)
+    (add-hook 'neotree-mode-hook 'hide-mode-line-mode)
+    (add-hook 'magit-mode-hook 'hide-mode-line-mode)
     )
-  (setq-default
-   spaceline-all-the-icons-separator-type 'none
-   spaceline-highlight-face-func 'spaceline-highlight-face-modified
-   spaceline-line-face 'spaceline-highlight-face-modified
-   )
-  (add-hook 'completion-list-mode-hook 'hide-mode-line-mode)
-  (add-hook 'neotree-mode-hook 'hide-mode-line-mode)
-  (add-hook 'magit-mode-hook 'hide-mode-line-mode)
-
-  ;; title bar invisible and frame to fill full screen
-  (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
-  (add-to-list 'default-frame-alist '(ns-appearance . dark))
-  (setq ns-use-proxy-icon nil)
-  (setq frame-title-format nil)
-  (setq frame-resize-pixelwise t)
-
-  ;; solaire mode
-  (add-hook 'change-major-mode-hook #'turn-on-solaire-mode)
-  (add-hook 'minibuffer-setup-hook #'solaire-mode-in-minibuffer)
-  (solaire-mode-swap-bg)
-
-  ;; doom themes
-  (setq doom-themes-enable-bold t
-        doom-themes-enable-italic t)
-  (doom-themes-visual-bell-config)
-
-  (call-interactively 'other-window 1)
+  (compile-modeline)
 )
 
 ;; Do not write anything past this comment. This is where Emacs will
@@ -437,7 +457,7 @@ This function is called at the very end of Spacemacs initialization."
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
    (quote
-    (exec-path-from-shell yasnippet-snippets xterm-color ws-butler winum which-key volatile-highlights vi-tilde-fringe uuidgen use-package unfill toc-org symon string-inflection sql-indent spaceline-all-the-icons solaire-mode smeargle shell-pop restart-emacs rainbow-delimiters popwin persp-mode pcre2el password-generator paradox overseer orgit org-projectile org-present org-pomodoro org-mime org-download org-bullets org-brain open-junk-file ob-ipython neotree nameless mwim multiple-cursors multi-term move-text mmm-mode markdown-toc magit-svn magit-gitflow macrostep lorem-ipsum link-hint jedi indent-guide hungry-delete htmlize hl-todo highlight-parentheses highlight-numbers hide-mode-line helm-xref helm-themes helm-swoop helm-purpose helm-projectile helm-mode-manager helm-make helm-gitignore helm-git-grep helm-flx helm-descbinds helm-company helm-c-yasnippet helm-ag google-translate golden-ratio gnuplot gitignore-templates gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link git-gutter-fringe git-gutter-fringe+ gh-md fuzzy font-lock+ flycheck-pos-tip flx-ido fill-column-indicator fancy-battery eyebrowse evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-org evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-magit evil-lisp-state evil-lion evil-indent-plus evil-iedit-state evil-goggles evil-exchange evil-escape evil-ediff evil-cleverparens evil-args evil-anzu eval-sexp-fu ess-smart-equals ess-R-data-view eshell-z eshell-prompt-extras esh-help elpy elisp-slime-nav ein editorconfig edbi dumb-jump dotenv-mode doom-themes doom-modeline diminish diff-hl define-word csv-mode counsel-projectile company-statistics column-enforce-mode clean-aindent-mode change-inner centered-cursor-mode browse-at-remote auto-yasnippet auto-highlight-symbol auto-compile aggressive-indent ace-window ace-link ace-jump-helm-line ac-ispell))))
+    (yasnippet-snippets xterm-color writeroom-mode visual-fill-column web-mode sql-indent spaceline-all-the-icons solaire-mode pdf-tools tablist paradox orgit org-pomodoro alert org-mime org-download org-brain nameless magit-svn link-hint hl-todo helm-projectile helm-org-rifle helm-make helm-descbinds git-timemachine git-link eyebrowse exec-path-from-shell evil-surround evil-nerd-commenter evil-matchit evil-magit elpy find-file-in-project ein polymode websocket editorconfig dumb-jump doom-themes doom-modeline diff-hl counsel-projectile counsel swiper ivy centered-cursor-mode auto-yasnippet all-the-icons ace-window ace-link avy expand-region ess julia-mode anzu iedit smartparens flycheck company window-purpose helm helm-core yasnippet multiple-cursors hierarchy magit-popup magit transient git-commit with-editor markdown-mode projectile js2-mode powerline dash which-key use-package hydra org-plus-contrib yaml-mode ws-butler winum web-beautify volatile-highlights vi-tilde-fringe uuidgen unfill toc-org tagedit symon string-inflection spinner spaceline smeargle slim-mode shrink-path shell-pop scss-mode sass-mode restart-emacs rainbow-delimiters pyvenv pug-mode prettier-js popwin persp-mode pcre2el password-generator overseer org-projectile org-present org-bullets open-junk-file ob-ipython nginx-mode neotree mwim multi-term move-text mmm-mode memoize markdown-toc magit-gitflow macrostep lv lorem-ipsum log4e livid-mode json-navigator json-mode js2-refactor js-doc jedi indent-guide impatient-mode imenu-list hungry-delete highlight-parentheses highlight-numbers highlight-indentation hide-mode-line helm-xref helm-themes helm-swoop helm-purpose helm-mode-manager helm-gitignore helm-git-grep helm-flx helm-css-scss helm-company helm-c-yasnippet helm-ag google-translate golden-ratio gnuplot gntp gitignore-templates gitconfig-mode gitattributes-mode git-messenger git-gutter-fringe git-gutter-fringe+ gh-md fuzzy font-lock+ flycheck-pos-tip flx-ido fill-column-indicator fancy-battery evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-org evil-numbers evil-lisp-state evil-lion evil-indent-plus evil-iedit-state evil-goggles evil-exchange evil-escape evil-ediff evil-cleverparens evil-args evil-anzu eval-sexp-fu ess-smart-equals ess-R-data-view eshell-z eshell-prompt-extras esh-help emmet-mode elisp-slime-nav eldoc-eval edbi dotenv-mode diminish define-word csv-mode company-web company-tern company-statistics column-enforce-mode clean-aindent-mode change-inner browse-at-remote bind-key auto-highlight-symbol auto-compile async aggressive-indent ace-jump-helm-line ac-ispell))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.

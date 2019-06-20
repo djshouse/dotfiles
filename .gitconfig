@@ -4,7 +4,7 @@
 	smudge = git-lfs smudge -- %f
 	process = git-lfs filter-process
 [user]
-	email = djrose7@gmail.com
+	email = djrose@amazon.com
 	name = DJ Rose
 [alias]
 	br = !git branch -va
@@ -14,7 +14,7 @@
 	spush = push --recurse-submodules=on-demand
 	supdate = submodule update --init --recursive
 	tidy = rebase -i @{u}
-	lg = log --graph --pretty=format:'%C(yellow)%h%Creset -%C(red)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative
+	log = log --graph --pretty=format:'%C(yellow)%h%Creset -%C(red)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative
 	summary = log --prettty=format:'[%h] %an %ar: %s' --stat
 	lp = log -p -1
 	srebase = submodule update --remote --rebase -- .
