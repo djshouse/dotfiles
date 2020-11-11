@@ -32,25 +32,28 @@ This function should only modify configuration layer settings."
 
    ;; List of configuration layers to load.
    dotspacemacs-configuration-layers
-   '(
-     ;; ----------------------------------------------------------------
-     ;; Example of useful layers you may want to use right away.
-     ;; Uncomment some layer names and press `SPC f e R' (Vim style) or
-     ;; `M-m f e R' (Emacs style) to install them.
-     ;; ----------------------------------------------------------------
-     auto-completion
+   '(html
      emacs-lisp
      git
-     helm
-     ;; lsp
-     ;; markdown
+     ivy
+     markdown
      multiple-cursors
      neotree
      org
-     ;; (shell :variables
-     ;;        shell-default-height 30
-     ;;        shell-default-position 'bottom)
-     ;; spell-checking
+     (python :variables
+             python-sort-imports-on-save t
+             python-format-on-save t
+             python-indent-guess-indent-offset-verbose nil)
+     (shell :variables
+            shell-default-height 30
+            shell-default-position 'bottom
+            shell-default-shell 'ansi-term)
+     (sql :variables sql-capitalize-keywords t)
+     (auto-completion :variables
+                      auto-completion-tab-key-behavior 'complete
+                      auto-completion-return-key-behavior nil
+                      auto-completion-enable-help-tooltip t
+                      auto-completion-enable-snippets-in-popup t)
      syntax-checking
      )
 
@@ -62,9 +65,8 @@ This function should only modify configuration layer settings."
    ;; '(your-package :location "~/path/to/your-package/")
    ;; Also include the dependencies as they will not be resolved automatically.
    dotspacemacs-additional-packages '(all-the-icons
-                                      doom-modeline
-                                      doom-themes
                                       exec-path-from-shell
+                                      ob-ipython
                                       solaire-mode)
 
    ;; A list of packages that cannot be updated.
@@ -199,7 +201,7 @@ It should only modify the values of Spacemacs settings."
    ;; refer to the DOCUMENTATION.org for more info on how to create your own
    ;; spaceline theme. Value can be a symbol or list with additional properties.
    ;; (default '(spacemacs :separator wave :separator-scale 1.5))
-   dotspacemacs-mode-line-theme '(spacemacs :separator wave :separator-scale 1.5)
+   dotspacemacs-mode-line-theme 'doom
 
    ;; If non-nil the cursor color matches the state color in GUI Emacs.
    ;; (default t)
@@ -250,7 +252,7 @@ It should only modify the values of Spacemacs settings."
 
    ;; If non-nil then the last auto saved layouts are resumed automatically upon
    ;; start. (default nil)
-   dotspacemacs-auto-resume-layouts t
+   dotspacemacs-auto-resume-layouts nil
 
    ;; If non-nil, auto-generate layout name when creating new layouts. Only has
    ;; effect when using the "jump to layout by number" commands. (default nil)
@@ -313,7 +315,7 @@ It should only modify the values of Spacemacs settings."
    ;; If non-nil the frame is undecorated when Emacs starts up. Combine this
    ;; variable with `dotspacemacs-maximized-at-startup' in OSX to obtain
    ;; borderless fullscreen. (default nil)
-   dotspacemacs-undecorated-at-startup nil
+   dotspacemacs-undecorated-at-startup t
 
    ;; A value from the range (0..100), in increasing opacity, which describes
    ;; the transparency level of a frame when it's active or selected.
@@ -359,13 +361,11 @@ It should only modify the values of Spacemacs settings."
    ;;   :size-limit-kb 1000)
    ;; When used in a plist, `visual' takes precedence over `relative'.
    ;; (default nil)
-   dotspacemacs-line-numbers '(:relative nil
+   dotspacemacs-line-numbers '(:relative t
                                :disabled-for-modes dired-mode
                                doc-view-mode
-                                         markdown-mode
-                                         org-mode
-                                         pdf-view-mode
-                                         text-mode
+                               markdown-mode
+                               pdf-view-mode
                                :size-limit-kb 1000)
 
    ;; Code folding method. Possible values are `evil' and `origami'.
@@ -374,7 +374,7 @@ It should only modify the values of Spacemacs settings."
 
    ;; If non-nil `smartparens-strict-mode' will be enabled in programming modes.
    ;; (default nil)
-   dotspacemacs-smartparens-strict-mode t
+   dotspacemacs-smartparens-strict-mode nil
 
    ;; If non-nil pressing the closing parenthesis `)' key in insert mode passes
    ;; over any automatically added closing parenthesis, bracket, quote, etc...
@@ -423,7 +423,7 @@ It should only modify the values of Spacemacs settings."
    ;; %z - mnemonics of buffer, terminal, and keyboard coding systems
    ;; %Z - like %z, but including the end-of-line format
    ;; (default "%I@%S")
-   dotspacemacs-frame-title-format "%I@%S"
+   dotspacemacs-frame-title-format "%I@%S@"
 
    ;; Format specification for setting the icon title format
    ;; (default nil - same as frame-title-format)
@@ -434,7 +434,7 @@ It should only modify the values of Spacemacs settings."
    ;; `trailing' to delete only the whitespace at end of lines, `changed' to
    ;; delete only whitespace for changed lines or `nil' to disable cleanup.
    ;; (default nil)
-   dotspacemacs-whitespace-cleanup nil
+   dotspacemacs-whitespace-cleanup t
 
    ;; Either nil or a number of seconds. If non-nil zone out after the specified
    ;; number of seconds. (default nil)
@@ -443,7 +443,7 @@ It should only modify the values of Spacemacs settings."
    ;; Run `spacemacs/prettify-org-buffer' when
    ;; visiting README.org files of Spacemacs.
    ;; (default nil)
-   dotspacemacs-pretty-docs nil))
+   dotspacemacs-pretty-docs t))
 
 (defun dotspacemacs/user-env ()
   "Environment variables setup.
@@ -479,22 +479,21 @@ before packages are loaded."
   (setq mac-command-modifier 'control)
   (setq mac-option-modifier 'meta)
 
-  ;; title bar invisible and frame to fill full screen
-  (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
-  (add-to-list 'default-frame-alist '(ns-appearance . dark))
-  (setq ns-use-proxy-icon nil)
-  (setq frame-title-format nil)
-  (setq frame-resize-pixelwise t)
+  ;; sensible window splitting
+  (setq split-height-threshold 120
+        split-width-threshold 120)
 
-  ;; solaire mode
-  (add-hook 'change-major-mode-hook #'turn-on-solaire-mode)
-  (add-hook 'minibuffer-setup-hook #'solaire-mode-in-minibuffer)
-  (solaire-mode-swap-bg)
+  (defun my-split-window-sensibly (&optional window)
+    (interactive)
+    (let ((window (or window (selected-window))))
+      (or (and (window-splittable-p window t)
+               (with-selected-window window
+                 (split-window-right)))
+          (and (window-splittable-p window)
+               (with-selected-window window
+                 (split-window-below))))))
 
-  ;; doom themes
-  (setq doom-themes-enable-bold t
-        doom-themes-enable-italic t)
-  (doom-themes-visual-bell-config)
+  (setq split-window-preferred-function #'my-split-window-sensibly)
 
   ;; flycheck
   (add-hook 'prog-mode-hook 'flycheck-mode)
@@ -503,15 +502,46 @@ before packages are loaded."
   (setq neo-theme 'icons)
   (setq neo-vc-integration '(face))
   (add-hook 'window-setup-hook 'neotree-show)
-  (setq neo-autorefresh nil)
 
   ;; exec path from shell
   (when (memq window-system '(mac ns x))
     (exec-path-from-shell-initialize))
 
-  ;; magit over tramp
+  ;; tramp
   (require 'tramp)
+  (setq tramp-default-method "ssh")
+  (setq tramp-verbose 10)
   (add-to-list 'tramp-remote-path "/apollo/env/SDETools/bin")
+
+  ;; map <Esc> to fj
+  (setq-default evil-escape-key-sequence "fj")
+  (setq-default evil-escape-unordered-key-sequence t)
+
+  ;; solaire mode
+  (solaire-global-mode +1)
+  (solaire-mode-swap-bg)
+  (load-theme 'doom-nord t)
+
+  ;; org-babel setup
+  (with-eval-after-load 'org
+    (setq
+     org-src-tab-acts-natively t
+     org-confirm-babel-evaluate nil
+     ob-async-no-async-languages-alist '("ipython")
+     org-startup-indented t
+     )
+    (org-babel-do-load-languages
+     'org-babel-load-languages
+     '(
+       (ipython . t)
+       (R . t)
+       (shell . t)
+       (sql . t)
+       ))
+    (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
+    (add-hook 'org-mode-hook #'visual-line-mode)
+    ;; (add-to-list 'spacemacs-default-company-backends 'company-ob-ipython)
+    )
   )
 
 ;; Do not write anything past this comment. This is where Emacs will
@@ -521,4 +551,19 @@ before packages are loaded."
 This is an auto-generated function, do not modify its content directly, use
 Emacs customize menu instead.
 This function is called at the very end of Spacemacs initialization."
-  )
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(evil-want-Y-yank-to-eol nil)
+ '(package-selected-packages
+   (quote
+    (vmd-mode mmm-mode markdown-toc gh-md emoji-cheat-sheet-plus company-emoji web-mode tagedit slim-mode scss-mode sass-mode pug-mode helm-css-scss haml-mode emmet-mode counsel-css company-web web-completion-data helm-pydoc helm-gtags helm-cscope helm helm-core web-beautify tide typescript-mode tern prettier-js nodejs-repl livid-mode skewer-mode js2-refactor multiple-cursors js2-mode js-doc import-js grizzl impatient-mode simple-httpd lsp-treemacs treemacs pfuture add-node-modules-path yapfify stickyfunc-enhance pytest pyenv-mode py-isort pippel pipenv pyvenv pip-requirements lsp-python-ms live-py-mode importmagic xcscope ggtags dap-mode bui tree-mode lsp-mode markdown-mode ht dash-functional cython-mode counsel-gtags counsel swiper ivy company-anaconda blacken anaconda-mode pythonic edbi epc ctable concurrent deferred yasnippet-snippets xterm-color ws-butler writeroom-mode winum which-key vterm volatile-highlights vi-tilde-fringe uuidgen use-package toc-org symon symbol-overlay string-inflection spaceline-all-the-icons solaire-mode smeargle shell-pop restart-emacs rainbow-delimiters popwin persp-mode pcre2el password-generator paradox overseer orgit org-projectile org-present org-pomodoro org-mime org-download org-cliplink org-bullets org-brain open-junk-file neotree nameless multi-term move-text magit-svn magit-gitflow macrostep lorem-ipsum link-hint indent-guide hybrid-mode hungry-delete htmlize hl-todo highlight-parentheses highlight-numbers highlight-indentation golden-ratio gnuplot gitignore-templates gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link fuzzy font-lock+ flycheck-pos-tip flycheck-package flx-ido fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-textobj-line evil-surround evil-org evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-magit evil-lisp-state evil-lion evil-indent-plus evil-iedit-state evil-goggles evil-exchange evil-escape evil-ediff evil-cleverparens evil-args evil-anzu eval-sexp-fu eshell-z eshell-prompt-extras esh-help elisp-slime-nav editorconfig dumb-jump dotenv-mode doom-themes doom-modeline diminish devdocs define-word company-statistics column-enforce-mode clean-aindent-mode centered-cursor-mode auto-yasnippet auto-highlight-symbol auto-compile aggressive-indent ace-window ace-link ac-ispell))))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(ein:cell-input-area ((t (:background "#2E3440")))))
+)

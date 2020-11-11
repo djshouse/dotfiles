@@ -1,6 +1,6 @@
 alias ll="ls -lh"
-alias bi="cd ~/djrose_plfashion/src/Private_label_fashion/Business\ Intelligence/"
 alias pf="ssh -NfL 8889:localhost:8889 dev-dsk-valverdm-2a-78555f66.us-west-2.amazon.com"
+alias sam="brazil-build-tool-exec sam"
 
 # terminal prompt formatting #
 export MYPS='$(echo -n "${PWD/#$HOME/~}" | awk -F "/" '"'"'{
@@ -14,10 +14,6 @@ if [[ -n $INSIDE_EMACS && $(uname) == 'Darwin' ]]; then
     stty ek
 fi
 
-export AWS_REGION=us-east-1
-
 export PATH=$BRAZIL_CLI_BIN:$PATH
 export PATH=$PATH:~/bin
 export PATH=/usr/bin:/usr/local/bin:$PATH
-
-export POSTGRES_HOME=/usr/local/bin
