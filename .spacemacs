@@ -46,7 +46,7 @@ This function should only modify configuration layer settings."
              python-indent-guess-indent-offset-verbose nil)
      (shell :variables
             shell-default-height 30
-            shell-default-position 'bottom
+            shell-default-position 'right
             shell-default-shell 'ansi-term)
      (sql :variables sql-capitalize-keywords t)
      (auto-completion :variables
@@ -364,7 +364,6 @@ It should only modify the values of Spacemacs settings."
    dotspacemacs-line-numbers '(:relative t
                                :disabled-for-modes dired-mode
                                doc-view-mode
-                               markdown-mode
                                pdf-view-mode
                                :size-limit-kb 1000)
 
@@ -379,7 +378,7 @@ It should only modify the values of Spacemacs settings."
    ;; If non-nil pressing the closing parenthesis `)' key in insert mode passes
    ;; over any automatically added closing parenthesis, bracket, quote, etc...
    ;; This can be temporary disabled by pressing `C-q' before `)'. (default nil)
-   dotspacemacs-smart-closing-parenthesis t
+   dotspacemacs-smart-closing-parenthesis nil
 
    ;; Select a scope to highlight delimiters. Possible values are `any',
    ;; `current', `all' or `nil'. Default is `all' (highlight any scope and
@@ -513,8 +512,8 @@ before packages are loaded."
   (setq tramp-verbose 10)
   (add-to-list 'tramp-remote-path "/apollo/env/SDETools/bin")
 
-  ;; map <Esc> to fj
-  (setq-default evil-escape-key-sequence "fj")
+  ;; map <Esc> to qp
+  (setq-default evil-escape-key-sequence "qp")
   (setq-default evil-escape-unordered-key-sequence t)
 
   ;; solaire mode
@@ -542,6 +541,22 @@ before packages are loaded."
     (add-hook 'org-mode-hook #'visual-line-mode)
     ;; (add-to-list 'spacemacs-default-company-backends 'company-ob-ipython)
     )
+
+  ;; Update indentation rules, select, insert, delete and update keywords
+  ;; are aligned with the clause start
+  (require 'sql-indent)
+
+  (defvar my-sql-indentation-offsets-alist
+    `((select-clause 0)
+      (insert-clause 0)
+      (delete-clause 0)
+      (update-clause 0)
+      ,@sqlind-default-indentation-offsets-alist))
+
+  (add-hook 'sqlind-minor-mode-hook
+            (lambda ()
+              (setq sqlind-indentation-offsets-alist
+                    my-sql-indentation-offsets-alist)))
   )
 
 ;; Do not write anything past this comment. This is where Emacs will
