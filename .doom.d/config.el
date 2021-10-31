@@ -69,3 +69,12 @@
 
 ;; stop doom from change treemacs font
 (setq doom-themes-treemacs-enable-variable-pitch nil)
+
+;; stop ivy from automatically entering a slash after tilde
+(setq ivy-magic-tilde nil)
+
+(setq jupyter-repl-echo-eval-p t)
+
+;; ignore brazil build directory in LSP
+(with-eval-after-load 'lsp-mode
+  (add-to-list 'lsp-file-watch-ignored-directories "[/\\\\]\\build\\'"))
