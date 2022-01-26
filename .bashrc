@@ -1,5 +1,4 @@
 alias ll="ls -lh"
-alias pf="ssh -NfL 8889:localhost:8889 dev-dsk-valverdm-2a-78555f66.us-west-2.amazon.com"
 alias sam="brazil-build-tool-exec sam"
 
 # terminal prompt formatting #
